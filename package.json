@@ -1,0 +1,30 @@
+{
+  "name": "cryptonotify",
+  "version": "1.0.0",
+  "description": "Crypto bot to scrape new added coins",
+  "main": "app.ts",
+  "dependencies": {
+    "fs": "^0.0.1-security",
+    "node-cron": "^3.0.0",
+    "node-fetch": "^2.6.1",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.2.4"
+  },
+  "devDependencies": {
+    "@types/node": "^15.0.2",
+    "@types/node-fetch": "^2.5.10"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/origranot/cryptonotify.git"
+  },
+  "author": "OriG",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/origranot/cryptonotify/issues"
+  },
+  "homepage": "https://github.com/origranot/cryptonotify#readme"
+}
