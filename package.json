@@ -4,14 +4,14 @@
   "description": "Crypto bot to scrape new added coins",
   "main": "app.ts",
   "dependencies": {
+    "audic": "^2.0.0",
     "fs": "^0.0.1-security",
     "node-cron": "^3.0.0",
     "node-fetch": "^2.6.1",
-    "ts-node": "^9.1.1",
-    "typescript": "^4.2.4"
+    "play": "^0.5.0",
+    "ts-node": "^9.1.1"
   },
   "devDependencies": {
-    "@types/node": "^15.0.2",
     "@types/node-fetch": "^2.5.10"
   },
   "scripts": {

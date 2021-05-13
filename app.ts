@@ -2,6 +2,10 @@ import * as fs from 'fs';
 import { exit } from 'process';
 import { Coin } from "./models/Coin";
 import fetch from 'node-fetch';
+const Audic = require("audic")
+
+// Notification sound
+const noficationSound = new Audic("/sounds/ding.mp3");
 
 
 var coinsArray: Coin[];
@@ -10,8 +14,8 @@ const COINS_FILE: string = "coins.json";
 
 /**
  * Function that loads coins from coins.txt to global variable.
- **/
-
+ * @returns boolean wether the coins were loaded successfully or not
+ */
 const loadCoins = (): boolean => {
     try {
         var rawCoinsArray: any = fs.readFileSync(COINS_FILE);
@@ -25,8 +29,9 @@ const loadCoins = (): boolean => {
 }
 
 /**
- * Save the coins file according to the global array
- **/
+ * Function to save the coins into the file
+ * @returns boolean wether the coins was saved successfully or not
+ */
 const saveCoinsFile = (): boolean => {
     fs.writeFile(COINS_FILE, JSON.stringify(coinsArray), (err) => {
         if (err) throw err;
@@ -35,6 +40,7 @@ const saveCoinsFile = (): boolean => {
 
     return false;
 }
+
 
 /**
  * Scrape CoinGecko for new recently added coins
@@ -48,8 +54,13 @@ const coingeckoScrape = () => {
             // Goes over the new coins and check for new coin
             for (let fetchedCoin of fetchedCoins) {
                 if (!isCoinExistInArray(fetchedCoin, coinsArray)) {
+
+                    // Play notification sounds
+                    noficationSound.play();
+
                     console.log('!!! NEW COIN HAS BEEN FOUND !!!')
                     console.log(`URL: https://www.coingecko.com/en/coins/${fetchedCoin.id}`)
+
                     // Add the new coin to the global Array
                     coinsArray.push(fetchedCoin);
                     newCoinsFound = true;
@@ -62,6 +73,14 @@ const coingeckoScrape = () => {
         });
 }
 
+/**
+ * 
+ * @param coin single coin object
+ * @param coinsArray array of coins
+ * @returns wether the coin exists in this array
+ */
+
+/** */
 const isCoinExistInArray = (coin: Coin, coinsArray: Coin[]): boolean => {
     let isFound: boolean = false;
     coinsArray.some((currCoin => {
@@ -81,14 +100,14 @@ if (!loadCoins()) {
 }
 
 
-
 coingeckoScrape();
 console.log('Starting to monitor..')
+noficationSound.play();
 
 // scrape every 30 seconds
 setInterval(() => {
     if (loadCoins()) {
-        console.log('Monitoring...')
+        console.log('Monitoring... - ' + new Date().getMinutes());
         coingeckoScrape();
     }
-}, 15000);
+}, 40000);
