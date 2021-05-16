@@ -5,6 +5,8 @@
   "main": "app.ts",
   "dependencies": {
     "audic": "^2.0.0",
+    "discord.js": "^12.5.3",
+    "dotenv": "^9.0.2",
     "fs": "^0.0.1-security",
     "node-fetch": "^2.6.1",
     "ts-node": "^9.1.1"

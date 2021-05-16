@@ -3,6 +3,11 @@ import { exit } from 'process';
 import { Coin } from "./models/Coin";
 import fetch from 'node-fetch';
 const Audic = require('audic');
+require('dotenv').config()
+
+import { DiscordBot } from './classes/DiscordBot'
+
+const discordBot = new DiscordBot(process.env.DISCORD_CHANNEL_ID)
 
 // Notification sound src
 const NOTIFICATION_SRC: string = "/sounds/ding.mp3";
@@ -63,6 +68,9 @@ const coingeckoScrape = () => {
                     console.log('!!! NEW COIN HAS BEEN FOUND !!!')
                     console.log(`URL: https://www.coingecko.com/en/coins/${fetchedCoin.id}`)
 
+                    // Send message to discord server
+                    discordBot.newGemAlert(fetchedCoin);
+
                     // Add the new coin to the global Array
                     coinsArray.push(fetchedCoin);
                     newCoinsFound = true;
@@ -72,7 +80,9 @@ const coingeckoScrape = () => {
             if (newCoinsFound) {
                 saveCoinsFile();
             }
-        });
+        }).catch(err => {
+            console.error('Could not get CoinGecko info..')
+        })
 }
 
 /**
@@ -110,21 +120,26 @@ const playNotificationSoundWithRepeat = (src: string, numOfRepeat: number, durat
     }, durationTime);
 }
 
-
-// load saved coins 
-if (!loadCoins()) {
-    console.error(`There was a problem loading coins from ${COINS_FILE}`)
-    exit();
-}
-
-
-coingeckoScrape();
-console.log('Starting to monitor..')
-
-// scrape every 30 seconds
-setInterval(() => {
-    if (loadCoins()) {
-        console.log('Monitoring... - ' + new Date().getMinutes());
-        coingeckoScrape();
+/**
+ *  Launch the code after login to discord
+ */
+discordBot.login(process.env.DISCORD_TOKEN).then(() => {
+    // load saved coins 
+    if (!loadCoins()) {
+        console.error(`There was a problem loading coins from ${COINS_FILE}`)
+        exit();
     }
-}, 40000);
+
+
+    coingeckoScrape();
+    console.log('Starting to monitor..')
+
+
+    // scrape every 30 seconds
+    setInterval(() => {
+        if (loadCoins()) {
+            console.log('Monitoring... - ' + new Date().getMinutes());
+            coingeckoScrape();
+        }
+    }, 35000);
+})
