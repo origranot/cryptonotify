@@ -10,7 +10,7 @@
   
         "args": ["app.ts"],
         
-        "cwd": "${workspaceRoot}",
+        "cwd": "${workspaceFolder}",
         "internalConsoleOptions": "openOnSessionStart",
         "skipFiles": ["<node_internals>/**", "node_modules/**"]
       }

@@ -2,14 +2,16 @@ import * as fs from 'fs';
 import { exit } from 'process';
 import { Coin } from "./models/Coin";
 import fetch from 'node-fetch';
-const Audic = require("audic")
+const Audic = require('audic');
 
-// Notification sound
-const noficationSound = new Audic("/sounds/ding.mp3");
+// Notification sound src
+const NOTIFICATION_SRC: string = "/sounds/ding.mp3";
 
 
 var coinsArray: Coin[];
 
+
+// Set up the coins file
 const COINS_FILE: string = "coins.json";
 
 /**
@@ -56,7 +58,7 @@ const coingeckoScrape = () => {
                 if (!isCoinExistInArray(fetchedCoin, coinsArray)) {
 
                     // Play notification sounds
-                    noficationSound.play();
+                    playNotificationSoundWithRepeat(NOTIFICATION_SRC, 5, 1000)
 
                     console.log('!!! NEW COIN HAS BEEN FOUND !!!')
                     console.log(`URL: https://www.coingecko.com/en/coins/${fetchedCoin.id}`)
@@ -92,6 +94,22 @@ const isCoinExistInArray = (coin: Coin, coinsArray: Coin[]): boolean => {
     return isFound;
 }
 
+/**
+ * 
+ * @param src Source of media file
+ * @param numOfRepeat Number of repreats to the src media file
+ * @param durationTime Duration time between each play of media file
+ */
+const playNotificationSoundWithRepeat = (src: string, numOfRepeat: number, durationTime: number) => {
+    const notificationRepeatInterval: NodeJS.Timeout = setInterval(() => {
+        if (numOfRepeat <= 0) {
+            clearInterval(notificationRepeatInterval);
+        }
+        new Audic(src).play()
+        numOfRepeat--;
+    }, durationTime);
+}
+
 
 // load saved coins 
 if (!loadCoins()) {
@@ -102,7 +120,6 @@ if (!loadCoins()) {
 
 coingeckoScrape();
 console.log('Starting to monitor..')
-noficationSound.play();
 
 // scrape every 30 seconds
 setInterval(() => {
