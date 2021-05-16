@@ -62,8 +62,10 @@ const coingeckoScrape = () => {
             for (let fetchedCoin of fetchedCoins) {
                 if (!isCoinExistInArray(fetchedCoin, coinsArray)) {
 
-                    // Play notification sounds
-                    playNotificationSoundWithRepeat(NOTIFICATION_SRC, 5, 1000)
+                    if (process.env.ENV === 'development') {
+                        // Play notification sounds
+                        playNotificationSoundWithRepeat(NOTIFICATION_SRC, 5, 1000)
+                    }
 
                     console.log('!!! NEW COIN HAS BEEN FOUND !!!')
                     console.log(`URL: https://www.coingecko.com/en/coins/${fetchedCoin.id}`)
