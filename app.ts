@@ -1,17 +1,20 @@
 import * as fs from 'fs';
 import { exit } from 'process';
-import { Coin } from "./models/Coin";
+import { Coin, Site } from "./models/Declarations";
 import fetch from 'node-fetch';
 const Audic = require('audic');
 require('dotenv').config()
 
 import { DiscordBot } from './classes/DiscordBot'
 
-const discordBot = new DiscordBot(process.env.DISCORD_CHANNEL_ID)
+const discordBot = new DiscordBot()
 
 // Notification sound src
 const NOTIFICATION_SRC: string = "/sounds/ding.mp3";
 
+// Get the envirable variable
+const DEVELOPMENT: boolean = process.env.ENV === "development";
+const CMC_API_KEY: any = process.env.CMC_API_KEY;
 
 var coinsArray: Coin[];
 
@@ -31,8 +34,9 @@ const loadCoins = (): boolean => {
     }
     catch (err) {
         console.error(err);
+        return false;
     }
-    return (coinsArray.length !== 0);
+    return true;
 }
 
 /**
@@ -52,53 +56,96 @@ const saveCoinsFile = (): boolean => {
 /**
  * Scrape CoinGecko for new recently added coins
  **/
-const coingeckoScrape = () => {
-    fetch('https://api.coingecko.com/api/v3/coins/list')
-        .then(res => res.json())
-        .then((fetchedCoins: Coin[]) => {
+const cgScrape = async () => {
+    try {
+        const response = await fetch('https://api.coingecko.com/api/v3/coins/list');
+        const fetchedCoins: any[] = await response.json();
+        checkForNewCoins(fetchedCoins, Site.CoinGecko);
+    } catch (err) {
+        console.error('Could not get CoinGecko info..')
+    }
+}
 
-            let newCoinsFound: boolean = false;
-            // Goes over the new coins and check for new coin
-            for (let fetchedCoin of fetchedCoins) {
-                if (!isCoinExistInArray(fetchedCoin, coinsArray)) {
-
-                    if (process.env.ENV === 'development') {
-                        // Play notification sounds
-                        playNotificationSoundWithRepeat(NOTIFICATION_SRC, 5, 1000)
-                    }
-
-                    console.log('!!! NEW COIN HAS BEEN FOUND !!!')
-                    console.log(`URL: https://www.coingecko.com/en/coins/${fetchedCoin.id}`)
-
-                    // Send message to discord server
-                    discordBot.newGemAlert(fetchedCoin);
-
-                    // Add the new coin to the global Array
-                    coinsArray.push(fetchedCoin);
-                    newCoinsFound = true;
-                }
+/**
+ * Scrape CoinMarketCap for new recently added coins
+ **/
+const cmcScrape = async () => {
+    try {
+        const response = await fetch('https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest', {
+            headers: {
+                'X-CMC_PRO_API_KEY': CMC_API_KEY
             }
-
-            if (newCoinsFound) {
-                saveCoinsFile();
-            }
-        }).catch(err => {
-            console.error('Could not get CoinGecko info..')
         })
+        const fetchedData = await response.json();
+        const fetchedCoins: any[] = fetchedData.data;
+        checkForNewCoins(fetchedCoins, Site.CoinMarketCap);
+    } catch (err) {
+        console.error('Could not get CoinMarketCap info..')
+    }
+}
+
+/**
+ * This function check for new coins in the new fetched array
+ * @param fetchedCoinsArray The new coins array that just got fetched
+ */
+const checkForNewCoins = (fetchedCoinsArray: any[], currentSite: Site) => {
+    let newCoinsFound: boolean = false;
+    // Goes over the new coins and check for new coin
+    for (let fetchedCoin of fetchedCoinsArray) {
+        let idOfFetchedCoin: string = `${fetchedCoin.name}:(${fetchedCoin.symbol}):${currentSite}`;
+        if (!isCoinExistInArray(idOfFetchedCoin, coinsArray)) {
+
+            const newCoin: Coin = {
+                id: idOfFetchedCoin,
+                name: fetchedCoin.name,
+                symbol: fetchedCoin.symbol,
+                site: currentSite
+            };
+
+            let linkToTheNewCoin: string;
+            switch (currentSite) {
+                case Site.CoinMarketCap:
+                    linkToTheNewCoin = `https://coinmarketcap.com/currencies/${fetchedCoin.slug}`
+                    break;
+                case Site.CoinGecko:
+                    linkToTheNewCoin = `https://www.coingecko.com/en/coins/${fetchedCoin.id}`
+                    break;
+                default:
+                    linkToTheNewCoin = ''
+                    break;
+            }
+
+            if (DEVELOPMENT) { // Console.log if it's in development mode
+                playNotificationSoundWithRepeat(NOTIFICATION_SRC, 5, 1000)
+                console.log('!!! NEW COIN HAS BEEN FOUND !!!')
+                console.log(`URL: ${linkToTheNewCoin}`)
+            } else { // If it's in production mode - Send message to discord server
+                discordBot.newGemAlert(newCoin, linkToTheNewCoin);
+            }
+
+            // Add the new coin to the global Array
+            coinsArray.push(newCoin);
+            newCoinsFound = true;
+        }
+    }
+
+    if (newCoinsFound) {
+        saveCoinsFile();
+    }
 }
 
 /**
  * 
- * @param coin single coin object
+ * @param id id of coin to check wether exists
  * @param coinsArray array of coins
  * @returns wether the coin exists in this array
  */
 
 /** */
-const isCoinExistInArray = (coin: Coin, coinsArray: Coin[]): boolean => {
+const isCoinExistInArray = (id: string, coinsArray: Coin[]): boolean => {
     let isFound: boolean = false;
     coinsArray.some((currCoin => {
-        if (currCoin.id === coin.id) {
+        if (currCoin.id === id) {
             return isFound = true;
         }
     }))
@@ -122,10 +169,18 @@ const playNotificationSoundWithRepeat = (src: string, numOfRepeat: number, durat
     }, durationTime);
 }
 
+
 /**
- *  Launch the code after login to discord
+ * Start the code
  */
-discordBot.login(process.env.DISCORD_TOKEN).then(() => {
+const start = async () => {
+    try {
+        await discordBot.login(process.env.DISCORD_TOKEN);
+    } catch (err) {
+        console.error('There was a problem login to discord..')
+        exit();
+    }
+
     // load saved coins 
     if (!loadCoins()) {
         console.error(`There was a problem loading coins from ${COINS_FILE}`)
@@ -133,15 +188,28 @@ discordBot.login(process.env.DISCORD_TOKEN).then(() => {
     }
 
 
-    coingeckoScrape();
+    cmcScrape();
+    cgScrape();
     console.log('Starting to monitor..')
 
 
     // scrape every 30 seconds
     setInterval(() => {
         if (loadCoins()) {
-            console.log('Monitoring... - ' + new Date().getMinutes());
-            coingeckoScrape();
+            console.log('Monitoring CoinGecko.. - ' + new Date().getMinutes());
+            cgScrape();
         }
     }, 35000);
-})
+
+    // scrape every 5 minutes
+    setInterval(() => {
+        if (loadCoins()) {
+            console.log('Monitoring CoinMarketCap.. - ' + new Date().getMinutes());
+            cmcScrape();
+        }
+    }, 300000);
+
+
+}
+
+start();

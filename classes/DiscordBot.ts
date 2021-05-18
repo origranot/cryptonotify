@@ -1,28 +1,25 @@
 const Discord = require('discord.js');
 const discord = new Discord.Client();
-import { Coin } from '../models/Coin';
+import { Coin, Site } from '../models/Declarations';
 
 export class DiscordBot {
 
-    private _channelId: string;
-
-    constructor(channelId: any) {
-
-        this._channelId = channelId;
-
-    }
+    constructor() { }
 
     async login(token: any) {
         await discord.login(token);
     }
 
+    newGemAlert = (coin: Coin, link: string) => {
 
-    newGemAlert = (coin: Coin) => {
-        discord.channels.cache.get(this._channelId).send(`🚨 New CoinGecko Listing 🚨\n` +
+        // Get the channel id from the .env config
+        const channelId: any = (coin.site === Site.CoinGecko) ? process.env.DISCORD_CHANNEL_CG_ID : process.env.DISCORD_CHANNEL_CMC_ID;
+        const tagRule: string = (coin.site === Site.CoinGecko) ? '843541384500609024' : '844203118119354368';
+
+        // Send the message to the correct channel
+        discord.channels.cache.get(channelId).send(`🚨 New ${coin.site} Listing 🚨\n` +
             `${coin.name} / $${coin.symbol}\n` +
-            `URL: https://www.coingecko.com/en/coins/${coin.id}\n\n` +
-            `<@&843541384500609024>`);
-
-
+            `URL: ${link}\n\n` +
+            `<@&${tagRule}>`);
     }
 }
