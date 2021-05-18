@@ -71,7 +71,7 @@ const cgScrape = async () => {
  **/
 const cmcScrape = async () => {
     try {
-        const response = await fetch('https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest', {
+        const response = await fetch('https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?sort=date_added&sort_dir=asc', {
             headers: {
                 'X-CMC_PRO_API_KEY': CMC_API_KEY
             }
