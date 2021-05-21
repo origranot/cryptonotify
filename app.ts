@@ -2,18 +2,14 @@ import * as fs from 'fs';
 import { exit } from 'process';
 import { Coin, Site } from "./models/Declarations";
 import fetch from 'node-fetch';
-const Audic = require('audic');
 require('dotenv').config()
 
 import { DiscordBot } from './classes/DiscordBot'
 
 const discordBot = new DiscordBot()
 
-// Notification sound src
-const NOTIFICATION_SRC: string = "/sounds/ding.mp3";
-
 // Get the envirable variable
-const DEVELOPMENT: boolean = process.env.ENV === "development";
+const DEVELOPMENT_ENV: boolean = process.env.ENV === "development";
 const CMC_API_KEY: any = process.env.CMC_API_KEY;
 
 var coinsArray: Coin[];
@@ -115,11 +111,11 @@ const checkForNewCoins = (fetchedCoinsArray: any[], currentSite: Site) => {
                     break;
             }
 
-            if (DEVELOPMENT) { // Console.log if it's in development mode
-                playNotificationSoundWithRepeat(NOTIFICATION_SRC, 5, 1000)
+            if (DEVELOPMENT_ENV) { // Console.log if it's in development mode
                 console.log('!!! NEW COIN HAS BEEN FOUND !!!')
                 console.log(`URL: ${linkToTheNewCoin}`)
-            } else { // If it's in production mode - Send message to discord server
+            } else {
+                // Send message to discord server
                 discordBot.newGemAlert(newCoin, linkToTheNewCoin);
             }
 
@@ -154,31 +150,18 @@ const isCoinExistInArray = (id: string, coinsArray: Coin[]): boolean => {
 }
 
 /**
- * 
- * @param src Source of media file
- * @param numOfRepeat Number of repreats to the src media file
- * @param durationTime Duration time between each play of media file
- */
-const playNotificationSoundWithRepeat = (src: string, numOfRepeat: number, durationTime: number) => {
-    const notificationRepeatInterval: NodeJS.Timeout = setInterval(() => {
-        if (numOfRepeat <= 0) {
-            clearInterval(notificationRepeatInterval);
-        }
-        new Audic(src).play()
-        numOfRepeat--;
-    }, durationTime);
-}
-
-
-/**
  * Start the code
  */
 const start = async () => {
-    try {
-        await discordBot.login(process.env.DISCORD_TOKEN);
-    } catch (err) {
-        console.error('There was a problem login to discord..')
-        exit();
+
+    // Check if this is prod environment
+    if (!DEVELOPMENT_ENV) {
+        try {
+            await discordBot.login(process.env.DISCORD_TOKEN);
+        } catch (err) {
+            console.error('There was a problem login to discord..')
+            exit();
+        }
     }
 
     // load saved coins 
@@ -195,21 +178,16 @@ const start = async () => {
 
     // scrape every 30 seconds
     setInterval(() => {
-        if (loadCoins()) {
-            console.log('Monitoring CoinGecko.. - ' + new Date().getMinutes());
-            cgScrape();
-        }
+        console.log('Monitoring CoinGecko.. - ' + new Date().getMinutes());
+        cgScrape();
+
     }, 35000);
 
     // scrape every 5 minutes
     setInterval(() => {
-        if (loadCoins()) {
-            console.log('Monitoring CoinMarketCap.. - ' + new Date().getMinutes());
-            cmcScrape();
-        }
+        console.log('Monitoring CoinMarketCap.. - ' + new Date().getMinutes());
+        cmcScrape();
     }, 300000);
-
-
 }
 
 start();
