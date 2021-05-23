@@ -11,8 +11,9 @@ export class TwitterClient {
 
     newGemAlert = async (coin: Coin, link: string) => {
         let tweetString: String = `🚨 New ${coin.site} Listing 🚨\n` +
-            `${coin.name} / $${coin.symbol}\n` +
-            `URL: ${link}`;
+            `${coin.name} / $${coin.symbol}\n\n` +
+            `#Defi #BSC #${coin.site}` +
+            `${link}`;
 
         await this.client.post("statuses/update", {
             status: tweetString
