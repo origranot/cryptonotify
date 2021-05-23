@@ -4,9 +4,16 @@ import { Coin, Site } from "./models/Declarations";
 import fetch from 'node-fetch';
 require('dotenv').config()
 
-import { DiscordBot } from './classes/DiscordBot'
+import { DiscordBot } from './classes/DiscordBot';
+import { TwitterClient } from './classes/TwitterClient';
 
 const discordBot = new DiscordBot()
+const twitterClient = new TwitterClient(
+    process.env.TWITTER_CONSUMER_KEY,
+    process.env.TWITTER_CONSUMER_SECRET,
+    process.env.TWITTER_ACCESS_KEY,
+    process.env.TWITTER_ACCESS_SECRET
+)
 
 // Get the envirable variable
 const DEVELOPMENT_ENV: boolean = process.env.ENV === "development";
@@ -117,6 +124,7 @@ const checkForNewCoins = (fetchedCoinsArray: any[], currentSite: Site) => {
             } else {
                 // Send message to discord server
                 discordBot.newGemAlert(newCoin, linkToTheNewCoin);
+                twitterClient.newGemAlert(newCoin, linkToTheNewCoin);
             }
 
             // Add the new coin to the global Array
