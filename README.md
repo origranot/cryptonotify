@@ -1,2 +1,6 @@
 # cryptonotify
-A crypto bot that notify about new listings.
+I got bored so I created a simple crypto bot that tweets about new coin listings.
+
+@CryptoNotifyBot
+
+DYOR, OriG.
