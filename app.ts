@@ -74,7 +74,7 @@ const cgScrape = async () => {
  **/
 const cmcScrape = async () => {
     try {
-        const response = await fetch('https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?sort=date_added&sort_dir=asc', {
+        const response = await fetch('https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?sort=date_added&sort_dir=desc', {
             headers: {
                 'X-CMC_PRO_API_KEY': CMC_API_KEY
             }
@@ -180,22 +180,22 @@ const start = async () => {
 
 
     cmcScrape();
-    cgScrape();
+    // cgScrape();
     console.log('Starting to monitor..')
 
 
-    // scrape every 30 seconds
-    setInterval(() => {
-        console.log('Monitoring CoinGecko.. - ' + new Date().getMinutes());
-        cgScrape();
+    // // scrape every 30 seconds
+    // setInterval(() => {
+    //     console.log('Monitoring CoinGecko.. - ' + new Date().getMinutes());
+    //     cgScrape();
 
-    }, 35000);
+    // }, 35000);
 
     // scrape every 5 minutes
     setInterval(() => {
         console.log('Monitoring CoinMarketCap.. - ' + new Date().getMinutes());
         cmcScrape();
-    }, 300000);
+    }, 5000);
 }
 
 start();
