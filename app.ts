@@ -4,10 +4,8 @@ import { Coin, Site } from "./models/Declarations";
 import fetch from 'node-fetch';
 require('dotenv').config()
 
-import { DiscordBot } from './classes/DiscordBot';
 import { TwitterClient } from './classes/TwitterClient';
 
-const discordBot = new DiscordBot()
 const twitterClient = new TwitterClient(
     process.env.TWITTER_CONSUMER_KEY,
     process.env.TWITTER_CONSUMER_SECRET,
@@ -122,8 +120,6 @@ const checkForNewCoins = (fetchedCoinsArray: any[], currentSite: Site) => {
                 console.log('!!! NEW COIN HAS BEEN FOUND !!!')
                 console.log(`URL: ${linkToTheNewCoin}`)
             } else {
-                // Send message to discord server
-                discordBot.newGemAlert(newCoin, linkToTheNewCoin);
                 twitterClient.newGemAlert(newCoin, linkToTheNewCoin);
             }
 
@@ -162,16 +158,6 @@ const isCoinExistInArray = (id: string, coinsArray: Coin[]): boolean => {
  */
 const start = async () => {
 
-    // Check if this is prod environment
-    if (!DEVELOPMENT_ENV) {
-        try {
-            await discordBot.login(process.env.DISCORD_TOKEN);
-        } catch (err) {
-            console.error('There was a problem login to discord..')
-            exit();
-        }
-    }
-
     // load saved coins 
     if (!loadCoins()) {
         console.error(`There was a problem loading coins from ${COINS_FILE}`)
@@ -180,22 +166,22 @@ const start = async () => {
 
 
     cmcScrape();
-    // cgScrape();
+    cgScrape();
     console.log('Starting to monitor..')
 
 
-    // // scrape every 30 seconds
-    // setInterval(() => {
-    //     console.log('Monitoring CoinGecko.. - ' + new Date().getMinutes());
-    //     cgScrape();
+    // scrape every 30 seconds
+    setInterval(() => {
+        console.log('Monitoring CoinGecko.. - ' + new Date().getMinutes());
+        cgScrape();
 
-    // }, 35000);
+    }, 1000 * 30);
 
     // scrape every 5 minutes
     setInterval(() => {
         console.log('Monitoring CoinMarketCap.. - ' + new Date().getMinutes());
         cmcScrape();
-    }, 5000);
+    }, 1000 * 60 * 5 );
 }
 
 start();

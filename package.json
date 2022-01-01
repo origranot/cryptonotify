@@ -4,7 +4,6 @@
   "description": "Crypto bot to scrape new added coins",
   "main": "app.ts",
   "dependencies": {
-    "discord.js": "^12.5.3",
     "dotenv": "^9.0.2",
     "fs": "^0.0.1-security",
     "node-fetch": "^2.6.1",
